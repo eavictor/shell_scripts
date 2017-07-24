@@ -1,0 +1,122 @@
+version: "3.3"
+
+
+services:
+    nginx:
+        image: eavictor/nginx:latest
+        deploy:
+            mode: global
+        ports:
+         - "80:80"
+        restart: always
+        volumes:
+             - /static:/static
+        links:
+         - daphne
+        networks:
+         - skynet
+
+    daphne:
+        image: eavictor/website:latest
+        deploy:
+            mode: global
+        ports:
+         - "8000"
+        restart: always
+        volumes:
+             - /static:/website/static
+        command: manage.py migrate && ./daphne.sh
+        links:
+         - db
+         - rabbitmq
+        networks:
+         - skynet
+
+    worker:
+        image: eavictor/website:latest
+        deploy:
+            replicas: 12
+        restart: always
+        command: ./runworker.sh
+        links:
+         - db
+         - rabbitmq
+        networks:
+         - skynet
+    
+    db:
+        image: mariadb:latest
+        environment:
+            MYSQL_ROOT_PASSWORD: "P@ssw0rd"
+            MYSQL_DATABASE: "main"
+            MYSQL_USER: "eavictor"
+            MYSQL_PASSWORD: "acgnotamashi"
+        deploy:
+            replicas: 1
+        ports:
+         - "3306"
+        restart: unless-stopped
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+#    consul_seed:
+#        image: consul:latest
+#        hostname: consul_seed
+#        deploy:
+#            replicas: 1
+#        restart: never
+#        environment:
+#            CONSUL_LOCAL_CONFIG: '{"disable_update_check": true}'
+#            CONSUL_BIND_INTERFACE: "eth0"
+#        entrypoint:
+#            - -sTERM
+#            - consul
+#            - agent
+#            - -server
+#            - -bootstrap-expect=3
+#            - -data-dir=/tmp/consuldata
+#            - -bind={{ GetInterfaceIP "eth0" }}
+#        networks:
+#            - skynet
+        
+    consul:
+        image: consul:latest
+        environment:
+            CONSUL_BIND_INTERFACE: "eth0"
+            CONSUL_LOCAL_CONFIG: '{"skip_leave_on_interrupt": true}'
+        deploy:
+            replicas: 1
+        ports:
+         - "8500"
+        restart: always
+        command: agent -server -ui -client=0.0.0.0 -bootstrap-expect=1 -retry-join=consul
+        networks:
+         - skynet
+
+    rabbitmq:
+        image: eavictor/rabbitmq:latest
+        environment:
+            AUTOCLUSTER_TYPE: "consul"
+            CONSUL_HOST: "consul"
+            CONSUL_PORT: "8500"
+            CONSUL_SVC: "rabbitmq"
+            CONSUL_SVC_ADDR_AUTO: "true"
+            AUTOCLUSTER_CLEANUP: "true"
+            CLEANUP_WARN_ONLY: "false"
+            RABBITMQ_ERLANG_COOKIE: "your_rabbitmq_secret_erlang_cookie_string"
+            RABBITMQ_DEFAULT_USER: "username"
+            RABBITMQ_DEFAULT_PASS: "password"
+        deploy:
+            mode: global
+        ports:
+         - "5672"
+         - "15672:15672"
+        restart: unless-stopped
+        links:
+         - consul
+        networks:
+         - skynet
+
+
+networks:
+    skynet:
+        driver: overlay
