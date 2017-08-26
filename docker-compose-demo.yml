@@ -69,8 +69,8 @@ services:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     deploy:
       replicas: 1
-      restart_policy:
-        condition: never
+#      restart_policy:
+#        condition: never
     networks:
      - skynet
 
