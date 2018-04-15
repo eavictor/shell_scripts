@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.4'
 
 services:
 #  nginx:
@@ -20,8 +20,8 @@ services:
 #     - skynet
 
 
-  web:
-    image: eavictor/web
+  daphne:
+    image: eavictor/website:1.3
     ports:
      - "80:80"
     deploy:
@@ -38,9 +38,8 @@ services:
      - skynet
     command: ./daphne.sh
 
-
   worker:
-    image: eavictor/web
+    image: eavictor/website:1.3
     deploy:
       mode: global
       update_config:
@@ -49,30 +48,30 @@ services:
       restart_policy:
         condition: on-failure
     depends_on:
-     - web
-     - db
-     - rabbitmq
+     - daphne
+#     - db
+     - rabbitmq_cluster_channels_daphne
+     - rabbitmq_cluster_channels_worker
     command: ./runworker.sh
     networks:
      - skynet
 
-
-  db:
-    image: mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: "P@ssw0rd"
-      MYSQL_DATABASE: "main"
-      MYSQL_USER: "eavictor"
-      MYSQL_PASSWORD: "acgnotamashi"
-    ports:
-     - "3306:3306"
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    deploy:
-      replicas: 1
-#      restart_policy:
-#        condition: never
-    networks:
-     - skynet
+#  db:
+#    image: mariadb
+#    environment:
+#      MYSQL_ROOT_PASSWORD: "P@ssw0rd"
+#      MYSQL_DATABASE: "main"
+#      MYSQL_USER: "eavictor"
+#      MYSQL_PASSWORD: "acgnotamashi"
+#    ports:
+#     - "3306:3306"
+#    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+#    deploy:
+#      replicas: 1
+##      restart_policy:
+##        condition: never
+#    networks:
+#     - skynet
 
   consul:
     image: consul
@@ -88,8 +87,8 @@ services:
       - skynet
 
 
-  rabbitmq:
-    image: eavictor/rabbitmq
+  rabbitmq_cluster_channels_daphne:
+    image: eavictor/rabbitmq_autocluster
     environment:
       AUTOCLUSTER_TYPE: "consul"
       CONSUL_HOST: "consul"
@@ -98,7 +97,7 @@ services:
       CONSUL_SVC_ADDR_AUTO: "true"
       AUTOCLUSTER_CLEANUP: "true"
       CLEANUP_WARN_ONLY: "false"
-      RABBITMQ_ERLANG_COOKIE: "secrect"
+      RABBITMQ_ERLANG_COOKIE: "daphne"
       RABBITMQ_DEFAULT_USER: "eavictor"
       RABBITMQ_DEFAULT_PASS: "acgnotamashi"
     ports:
@@ -113,6 +112,30 @@ services:
       restart_policy:
         condition: on-failure
 
+  rabbitmq_cluster_channels_worker:
+    image: eavictor/rabbitmq_autocluster
+    environment:
+      AUTOCLUSTER_TYPE: "consul"
+      CONSUL_HOST: "consul"
+      CONSUL_PORT: "8500"
+      CONSUL_SVC: "rabbitmq"
+      CONSUL_SVC_ADDR_AUTO: "true"
+      AUTOCLUSTER_CLEANUP: "true"
+      CLEANUP_WARN_ONLY: "false"
+      RABBITMQ_ERLANG_COOKIE: "worker"
+      RABBITMQ_DEFAULT_USER: "eavictor"
+      RABBITMQ_DEFAULT_PASS: "acgnotamashi"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    depends_on:
+     - consul
+    networks:
+      - skynet
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
 
 networks:
   skynet:
