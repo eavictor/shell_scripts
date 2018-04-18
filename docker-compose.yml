@@ -15,7 +15,7 @@ services:
       - skynet
 
   rabbitmq_cluster_channels_daphne:
-  image: eavictor/rabbitmq_autocluster
+    image: eavictor/rabbitmq_autocluster
       environment:
       AUTOCLUSTER_TYPE: "consul"
       CONSUL_HOST: "consul"
