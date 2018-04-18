@@ -15,18 +15,18 @@ services:
       - skynet
 
   rabbitmq_cluster_channels_daphne:
-    image: eavictor/rabbitmq_autocluster
+    image: eavictor/rabbitmq_autocluster:1.3
       environment:
-      AUTOCLUSTER_TYPE: "consul"
-      CONSUL_HOST: "consul"
-      CONSUL_PORT: "8500"
-      CONSUL_SVC: "rabbitmq"
-      CONSUL_SVC_ADDR_AUTO: "true"
-      AUTOCLUSTER_CLEANUP: "true"
-      CLEANUP_WARN_ONLY: "false"
-      RABBITMQ_ERLANG_COOKIE: "daphne"
-      RABBITMQ_DEFAULT_USER: "eavictor"
-      RABBITMQ_DEFAULT_PASS: "acgnotamashi"
+        AUTOCLUSTER_TYPE: "consul"
+        CONSUL_HOST: "consul"
+        CONSUL_PORT: "8500"
+        CONSUL_SVC: "rabbitmq"
+        CONSUL_SVC_ADDR_AUTO: "true"
+        AUTOCLUSTER_CLEANUP: "true"
+        CLEANUP_WARN_ONLY: "false"
+        RABBITMQ_ERLANG_COOKIE: "daphne"
+        RABBITMQ_DEFAULT_USER: "eavictor"
+        RABBITMQ_DEFAULT_PASS: "acgnotamashi"
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -40,7 +40,7 @@ services:
         condition: on-failure
 
   rabbitmq_cluster_channels_worker:
-    image: eavictor/rabbitmq_autocluster
+    image: eavictor/rabbitmq_autocluster:1.3
     environment:
       AUTOCLUSTER_TYPE: "consul"
       CONSUL_HOST: "consul"
@@ -65,7 +65,7 @@ services:
         condition: on-failure
 
   rabbitmq_cluster_external:
-    image: eavictor/rabbitmq_autocluster
+    image: eavictor/rabbitmq_autocluster:1.3
     environment:
       AUTOCLUSTER_TYPE: "consul"
       CONSUL_HOST: "consul"
