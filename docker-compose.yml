@@ -30,7 +30,7 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    depends_on:
+    links:
      - consul
     networks:
       - skynet
@@ -55,7 +55,7 @@ services:
     ports:
       - "5673:5672"
       - "15673:15672"
-    depends_on:
+    links:
      - consul
     networks:
       - skynet
@@ -80,7 +80,7 @@ services:
     ports:
       - "5674:5672"
       - "15674:15672"
-    depends_on:
+    links:
      - consul
     networks:
       - skynet
@@ -100,7 +100,7 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    depends_on:
+    links:
      - rabbitmq_cluster_channels_daphne
      - rabbitmq_cluster_channels_worker
      - rabbitmq_cluster_external
@@ -117,7 +117,7 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    depends_on:
+    links:
      - daphne
      - rabbitmq_cluster_channels_daphne
      - rabbitmq_cluster_channels_worker
@@ -135,7 +135,7 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    depends_on:
+    links:
      - rabbitmq_cluster_external
 
 networks:
