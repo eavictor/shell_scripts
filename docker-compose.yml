@@ -7,7 +7,7 @@ services:
       CONSUL_BIND_INTERFACE: "eth0"
       CONSUL_LOCAL_CONFIG: '{"skip_leave_on_interrupt": true}'
     ports:
-     - "8500:8500"
+     - "8500"
     deploy:
       replicas: 1
       update_config:
@@ -20,7 +20,7 @@ services:
       - skynet
 
   rabbitmq_cluster_channels_daphne:
-    image: eavictor/rabbitmq_autocluster:1.3
+    image: eavictor/rabbitmq_autocluster:3.6.15-management
     environment:
       AUTOCLUSTER_TYPE: "consul"
       CONSUL_HOST: "consul"
@@ -33,9 +33,9 @@ services:
       RABBITMQ_DEFAULT_USER: "eavictor"
       RABBITMQ_DEFAULT_PASS: "acgnotamashi"
     ports:
-      - "5672:5672"
+      - "5672"
       - "15672:15672"
-    links:
+    depends_on:
      - consul
     networks:
       - skynet
@@ -48,7 +48,7 @@ services:
         condition: on-failure
 
   rabbitmq_cluster_channels_worker:
-    image: eavictor/rabbitmq_autocluster:1.3
+    image: eavictor/rabbitmq_autocluster:3.6.15-management
     environment:
       AUTOCLUSTER_TYPE: "consul"
       CONSUL_HOST: "consul"
@@ -61,9 +61,9 @@ services:
       RABBITMQ_DEFAULT_USER: "eavictor"
       RABBITMQ_DEFAULT_PASS: "acgnotamashi"
     ports:
-      - "5673:5672"
+      - "5672"
       - "15673:15672"
-    links:
+    depends_on:
      - consul
     networks:
       - skynet
@@ -76,7 +76,7 @@ services:
         condition: on-failure
 
   rabbitmq_cluster_external:
-    image: eavictor/rabbitmq_autocluster:1.3
+    image: eavictor/rabbitmq_autocluster:3.6.15-management
     environment:
       AUTOCLUSTER_TYPE: "consul"
       CONSUL_HOST: "consul"
@@ -89,9 +89,9 @@ services:
       RABBITMQ_DEFAULT_USER: "eavictor"
       RABBITMQ_DEFAULT_PASS: "acgnotamashi"
     ports:
-      - "5674:5672"
+      - "5672"
       - "15674:15672"
-    links:
+    depends_on:
      - consul
     networks:
       - skynet
@@ -114,7 +114,7 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    links:
+    depends_on:
      - rabbitmq_cluster_channels_daphne
      - rabbitmq_cluster_channels_worker
      - rabbitmq_cluster_external
@@ -149,7 +149,7 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    links:
+    depends_on:
      - rabbitmq_cluster_external
 
 networks:
